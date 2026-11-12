@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarX - Car Rental Agency Management System</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- System Diagnostic Header Bar -->
+  <aside class="sys-banner" id="sys-banner">
+    <div class="sys-banner-content">
+      <div class="sys-status-group">
+        <span class="status-indicator online"></span>
+        <span class="sys-label">SYSTEM ONLINE</span>
+        <span class="sys-sep">|</span>
+        <span class="sys-tag" id="cache-status-tag">Cache (sessionStorage): Checking...</span>
+        <span class="sys-sep">|</span>
+        <span class="sys-tag" id="db-status-tag">Main DB (localStorage): Connected</span>
+      </div>
+      <div class="demo-quick-switchers">
+        <span class="quick-label">⚡ 1-Click Demo Login:</span>
+        <button type="button" class="btn-quick-login" onclick="quickDemoLogin('customer')">Customer (Priya)</button>
+        <button type="button" class="btn-quick-login" onclick="quickDemoLogin('agency')">Agency (Apex Fleet)</button>
+        <button type="button" class="btn-quick-reset" onclick="resetToInitialSeed()" title="Reset localStorage to default seed data">↺ Reset Data</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Navigation Bar -->
+  <header class="main-header" id="main-header">
+    <div class="nav-container">
+      <div class="brand-zone" onclick="navigateToDashboard()">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.7 2 10.8 2 11v5c0 .6.4 1 1 1h2"></path>
+            <circle cx="7" cy="17" r="2"></circle>
+            <path d="M9 17h6"></path>
+            <circle cx="17" cy="17" r="2"></circle>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">Car<span class="brand-accent">X</span></div>
+          <div class="brand-sub">Mobility & Agency Platform</div>
+        </div>
+      </div>
+
+      <!-- Navigation links (rendered dynamically based on session/role) -->
+      <nav class="nav-menu" id="nav-menu">
+        <!-- Injected via JavaScript -->
+      </nav>
+
+      <!-- User Session Actions / Profile -->
+      <div class="nav-actions" id="nav-actions">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner / Agency Alerts -->
+  <div id="urgent-alerts-container"></div>
+
+  <!-- Main Content View Container -->
+  <main class="app-main" id="app-main">
+
+    <!-- VIEW 1: AUTHENTICATION GATEWAY (LOGIN / REGISTER / GOOGLE OAUTH) -->
+    <section class="view-panel" id="view-auth">
+      <div class="auth-wrapper">
+        <div class="auth-hero">
+          <div class="hero-badge">Autonomous Rental Ecosystem</div>
+          <h1 class="hero-title">Intelligent Fleet & Self-Drive Booking Architecture</h1>
+          <p class="hero-desc">Experience next-generation car rental management. Seamless vehicle reservations, instant KYC verification, time-based dynamic refunds, and comprehensive fleet oversight for agencies.</p>
+          
+          <div class="hero-features">
+            <div class="feature-item">
+              <span class="f-icon">⚡</span>
+              <div>
+                <strong>Active Session Cache</strong>
+                <p>Instant resume via sessionStorage security tokens</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="f-icon">🛡️</span>
+              <div>
+                <strong>Time-Based Smart Refunds</strong>
+                <p>Dynamic automated tier cancellation algorithm</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="f-icon">🚗</span>
+              <div>
+                <strong>Verified Fleet Oversight</strong>
+                <p>Direct driver assignment and RC-level traceability</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-card">
+          <!-- Role Switcher -->
+          <div class="role-switcher-tabs" id="role-switcher">
+            <button type="button" class="role-tab active" data-role="customer" onclick="setAuthRole('customer')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Customer (User)
+            </button>
+            <button type="button" class="role-tab" data-role="agency" onclick="setAuthRole('agency')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              Agency Manager
+            </button>
+          </div>
+
+          <!-- Auth Mode Toggle: Sign In vs Register -->
+          <div class="auth-mode-toggle">
+            <button type="button" class="mode-btn active" id="btn-mode-login" onclick="toggleAuthMode('login')">Sign In</button>
+            <button type="button" class="mode-btn" id="btn-mode-register" onclick="toggleAuthMode('register')">Register New Account</button>
+          </div>
+
+          <!-- Cache Verification Notification -->
+          <div class="cache-alert" id="auth-cache-msg">
+            <span class="cache-pulse"></span>
+            <span id="auth-cache-text">Checking active session token in cache memory...</span>
+          </div>
+
+          <!-- LOGIN FORM -->
+          <form class="auth-form" id="form-login" onsubmit="handleEmailLogin(event)">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <div class="input-with-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <input type="email" id="login-email" required placeholder="name@example.com" autocomplete="email">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <div class="input-with-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-block" id="btn-submit-login">
+              Authenticate & Access Dashboard
+            </button>
+          </form>
+
+          <!-- REGISTER FORM -->
+          <form class="auth-form hidden" id="form-register" onsubmit="handleRegistration(event)">
+            <div class="form-group">
+              <label for="reg-name">Full Name</label>
+              <input type="text" id="reg-name" required placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+              <label for="reg-email">Email Address</label>
+              <input type="email" id="reg-email" required placeholder="john@example.com">
+            </div>
+
+            <div class="form-group">
+              <label for="reg-phone">Phone Number</label>
+              <input type="tel" id="reg-phone" required placeholder="+91 98765 43210">
+            </div>
+
+            <div class="form-group" id="reg-agency-group" style="display:none;">
+              <label for="reg-agency-name">Rental Agency Name</label>
+              <input type="text" id="reg-agency-name" placeholder="e.g., Summit Drive Fleet">
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password">Password</label>
+              <input type="password" id="reg-password" required placeholder="Create strong password">
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">
+              Register Account to Main Database
+            </button>
+          </form>
+
+          <div class="auth-divider">
+            <span>OR AUTHENTICATE WITH</span>
+          </div>
+
+          <!-- Simulated Google OAuth Button -->
+          <button type="button" class="btn-google-oauth" onclick="triggerGoogleOAuth()">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            Continue with Gmail / Google OAuth
+          </button>
+
+          <!-- Quick Test Credentials Card -->
+          <div class="demo-creds-hint">
+            <span class="hint-title">💡 Seeded Test Credentials:</span>
+            <div class="creds-tags">
+              <span class="cred-chip" onclick="fillCreds('user@carx.com', 'pass123', 'customer')">Customer: user@carx.com</span>
+              <span class="cred-chip" onclick="fillCreds('apex@carx.com', 'admin123', 'agency')">Agency: apex@carx.com</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: CUSTOMER PORTAL -->
+    <section class="view-panel hidden" id="view-customer">
+      
+      <!-- Customer Dashboard Top Hub -->
+      <div class="portal-header">
+        <div class="portal-header-left">
+          <div class="welcome-label">Customer Portal</div>
+          <h2 class="welcome-title" id="cust-welcome-title">Welcome back, Traveler</h2>
+          <p class="welcome-sub">Search verified vehicles, manage active reservations, and track dynamic refund requests.</p>
+        </div>
+        <div class="portal-header-right">
+          <div class="cache-badge" id="cust-cache-badge">
+            <span class="pulse-dot"></span>
+            Session Cache: <strong id="cust-session-key">Active</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Core 5 Workflow Action Tiles (Dashboard Hub) -->
+      <div class="workflow-hub-grid">
+        <div class="hub-tile" onclick="openCustomerWorkflow('vehicles')">
+          <div class="tile-icon-box bg-blue">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.7 2 10.8 2 11v5c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+          </div>
+          <div class="tile-content">
+            <span class="tile-tag">Workflow 1</span>
+            <h3 class="tile-title">Browse Vehicles</h3>
+            <p class="tile-desc">Filter by Agency, category, daily rate & real-time availability</p>
+          </div>
+          <div class="tile-action">Explore Fleet →</div>
+        </div>
+
+        <div class="hub-tile" onclick="openCustomerWorkflow('booking')">
+          <div class="tile-icon-box bg-emerald">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <div class="tile-content">
+            <span class="tile-tag">Workflow 2</span>
+            <h3 class="tile-title">Book & Verify KYC</h3>
+            <p class="tile-desc">Instant document upload preview & automated fare calculation</p>
+          </div>
+          <div class="tile-action">Book Now →</div>
+        </div>
+
+        <div class="hub-tile" onclick="openCustomerWorkflow('rides')">
+          <div class="tile-icon-box bg-indigo">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div class="tile-content">
+            <span class="tile-tag">Workflow 3</span>
+            <h3 class="tile-title">Ride Status & Tickets</h3>
+            <p class="tile-desc">View active rides, download/print tickets & mark returns</p>
+          </div>
+          <div class="tile-action">View Bookings (<span id="active-rides-counter">0</span>) →</div>
+        </div>
+
+        <div class="hub-tile" onclick="openCustomerWorkflow('cancellation')">
+          <div class="tile-icon-box bg-rose">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          </div>
+          <div class="tile-content">
+            <span class="tile-tag">Workflow 4</span>
+            <h3 class="tile-title">Cancel & Time Refund</h3>
+            <p class="tile-desc">Tier-based automated refund (&gt;24h 90%, 6-24h 50%, &lt;6h 20%)</p>
+          </div>
+          <div class="tile-action">Manage Cancellation →</div>
+        </div>
+
+        <div class="hub-tile" onclick="openCustomerWorkflow('feedback')">
+          <div class="tile-icon-box bg-amber">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <div class="tile-content">
+            <span class="tile-tag">Workflow 5</span>
+            <h3 class="tile-title">Reviews & Feedback</h3>
+            <p class="tile-desc">Submit 5-star ratings & comments for completed rides</p>
+          </div>
+          <div class="tile-action">Write Feedback →</div>
+        </div>
+      </div>
+
+      <!-- Customer Subviews Container -->
+      <div class="customer-subviews">
+
+        <!-- SUBVIEW: BROWSE VEHICLES -->
+        <div class="subview-section" id="subview-vehicles">
+          <div class="section-title-bar">
+            <div>
+              <h3 class="sec-title">Fleet Directory</h3>
+              <p class="sec-desc">Available rental vehicles from all partner agencies</p>
+            </div>
+            <button type="button" class="btn-secondary" onclick="navigateToDashboard()">
+              ← Return to Dashboard
+            </button>
+          </div>
+
+          <!-- Filter Control Deck -->
+          <div class="filter-deck">
+            <div class="filter-grid">
+              <div class="filter-col">
+                <label for="filter-agency">Agency Partner</label>
+                <select id="filter-agency" onchange="applyVehicleFilters()">
+                  <option value="ALL">All Rental Agencies</option>
+                  <!-- Populated via View_agency_list() -->
+                </select>
+              </div>
+
+              <div class="filter-col">
+                <label for="filter-type">Vehicle Category</label>
+                <select id="filter-type" onchange="applyVehicleFilters()">
+                  <option value="ALL">All Categories</option>
+                  <option value="SUV">SUV</option>
+                  <option value="Sedan">Sedan</option>
+                  <option value="Hatchback">Hatchback</option>
+                  <option value="Luxury">Luxury</option>
+                </select>
+              </div>
+
+              <div class="filter-col">
+                <label for="filter-status">Availability</label>
+                <select id="filter-status" onchange="applyVehicleFilters()">
+                  <option value="ALL">All Statuses</option>
+                  <option value="Available" selected>Available Only</option>
+                  <option value="Booked">Currently Booked</option>
+                </select>
+              </div>
+
+              <div class="filter-col">
+                <label for="filter-price-range">Max Rate: $<span id="filter-price-val">150</span>/day</label>
+                <input type="range" id="filter-price-range" min="30" max="200" step="5" value="150" oninput="updatePriceSlider(this.value)">
+              </div>
+            </div>
+
+            <div class="filter-search-row">
+              <div class="search-input-box">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="filter-search" placeholder="Search by model name or RC Number (e.g., Creta, DL-01...)" oninput="applyVehicleFilters()">
+              </div>
+              <button type="button" class="btn-outline" onclick="resetVehicleFilters()">Reset Filters</button>
+            </div>
+          </div>
+
+          <!-- Vehicles Grid Container -->
+          <div class="vehicles-grid" id="vehicles-grid">
+            <!-- Injected via View_Vehicle_List() -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW: BOOKING & KYC DOCUMENT VERIFICATION -->
+        <div class="subview-section hidden" id="subview-booking">
+          <div class="section-title-bar">
+            <div>
+              <h3 class="sec-title">Vehicle Booking & KYC Verification</h3>
+              <p class="sec-desc">Submit itinerary, upload identity proof, and review automated fare</p>
+            </div>
+            <button type="button" class="btn-secondary" onclick="navigateToDashboard()">
+              ← Return to Dashboard
+            </button>
+          </div>
+
+          <div class="booking-layout">
+            <!-- Booking Form -->
+            <div class="booking-form-card">
+              <h4 class="card-heading">1. Trip Schedule & Driver Options</h4>
+              
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="book-vehicle-select">Select Vehicle</label>
+                  <select id="book-vehicle-select" onchange="onBookingVehicleChange()">
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="book-location">Pickup & Return Location</label>
+                  <select id="book-location">
+                    <option value="Airport International Terminal (Hub 1)">Airport International Terminal (Hub 1)</option>
+                    <option value="Central Railway Station Hub">Central Railway Station Hub</option>
+                    <option value="Downtown Metro Transit Hub">Downtown Metro Transit Hub</option>
+                    <option value="Suburban Express Plaza">Suburban Express Plaza</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="book-pickup-datetime">Pickup Date & Time</label>
+                  <input type="datetime-local" id="book-pickup-datetime" required onchange="recalculateFare()">
+                </div>
+                <div class="form-group flex-1">
+                  <label for="book-return-datetime">Return Date & Time</label>
+                  <input type="datetime-local" id="book-return-datetime" required onchange="recalculateFare()">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Chauffeur / Driver Preference</label>
+                <div class="driver-options-grid">
+                  <label class="radio-card selected">
+                    <input type="radio" name="driver-option" value="self" checked onchange="toggleDriverOption('self')">
+                    <div class="radio-content">
+                      <span class="r-title">Self-Drive</span>
+                      <span class="r-desc">You drive the car yourself (No driver fee)</span>
+                    </div>
+                  </label>
+                  <label class="radio-card">
+                    <input type="radio" name="driver-option" value="agency" onchange="toggleDriverOption('agency')">
+                    <div class="radio-content">
+                      <span class="r-title">With Agency Chauffeur</span>
+                      <span class="r-desc">Certified agency driver (+$25/day)</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <h4 class="card-heading mt-4">2. Mandatory KYC & Document Verification</h4>
+              
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="book-license-no">Driving License Number</label>
+                  <input type="text" id="book-license-no" placeholder="DL-IND-2022-998822" required>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="book-doc-id">KYC Document ID (Passport / National ID)</label>
+                  <input type="text" id="book-doc-id" placeholder="ID-PASS-884920" required>
+                </div>
+              </div>
+
+              <!-- Document Upload Preview Box -->
+              <div class="form-group">
+                <label>Upload Document Image (License or Govt ID Preview)</label>
+                <div class="file-dropzone" id="file-dropzone">
+                  <input type="file" id="book-doc-file" accept="image/*" onchange="handleDocUploadPreview(event)">
+                  <div class="dropzone-inner" id="dropzone-empty">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <span>Click or Drag & Drop to upload document copy</span>
+                    <small>Supports PNG, JPG, WebP (Simulated client preview)</small>
+                  </div>
+                  <div class="doc-preview-container hidden" id="doc-preview-container">
+                    <img id="doc-preview-img" src="" alt="Document Preview">
+                    <div class="doc-preview-meta">
+                      <span class="doc-verified-badge">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Simulated KYC Verified
+                      </span>
+                      <span id="doc-file-name" class="doc-name">license.png</span>
+                      <button type="button" class="btn-text-danger" onclick="clearDocUpload()">Remove</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="btn-primary btn-block btn-lg" onclick="Book_Vehicle()">
+                Proceed to Secure Checkout & Payment
+              </button>
+            </div>
+
+            <!-- Booking Summary & Dynamic Cost Calculator -->
+            <div class="booking-summary-sidebar">
+              <div class="summary-card" id="selected-vehicle-preview">
+                <!-- Injected dynamically -->
+              </div>
+
+              <div class="cost-breakdown-card">
+                <h4 class="card-heading">Automated Fare Breakdown</h4>
+                
+                <div class="breakdown-line">
+                  <span>Daily Rate</span>
+                  <span id="calc-daily-rate">$0 / day</span>
+                </div>
+                <div class="breakdown-line">
+                  <span>Total Duration</span>
+                  <span id="calc-duration">1 Day</span>
+                </div>
+                <div class="breakdown-line">
+                  <span>Base Vehicle Fare</span>
+                  <span id="calc-base-fare">$0.00</span>
+                </div>
+                <div class="breakdown-line" id="row-driver-fee" style="display:none;">
+                  <span>Agency Chauffeur Fee ($25/day)</span>
+                  <span id="calc-driver-fee">$0.00</span>
+                </div>
+                <div class="breakdown-line">
+                  <span>Refundable Security Deposit</span>
+                  <span id="calc-deposit" class="text-emerald">+$100.00</span>
+                </div>
+                <div class="breakdown-line">
+                  <span>Platform Fee & Taxes (12%)</span>
+                  <span id="calc-tax">$0.00</span>
+                </div>
+                <div class="breakdown-divider"></div>
+                <div class="breakdown-line total-line">
+                  <span>Total Payable Today</span>
+                  <span id="calc-total-payable" class="total-price">$0.00</span>
+                </div>
+                <p class="deposit-note">🛡️ The security deposit ($100.00) is 100% refunded when the vehicle is marked returned in good condition.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW: ACTIVE RIDE STATUS & MY BOOKINGS -->
+        <div class="subview-section hidden" id="subview-rides">
+          <div class="section-title-bar">
+            <div>
+              <h3 class="sec-title">Active Reservations & Rental History</h3>
+              <p class="sec-desc">Track real-time ride status, access printable digital tickets, or mark rides completed</p>
+            </div>
+            <button type="button" class="btn-secondary" onclick="navigateToDashboard()">
+              ← Return to Dashboard
+            </button>
+          </div>
+
+          <!-- Status Filter Tabs -->
+          <div class="status-tabs-row">
+            <button type="button" class="status-tab active" onclick="filterRides('ALL')">All Bookings</button>
+            <button type="button" class="status-tab" onclick="filterRides('Active')">Active / Confirmed</button>
+            <button type="button" class="status-tab" onclick="filterRides('Completed')">Completed</button>
+            <button type="button" class="status-tab" onclick="filterRides('Cancelled')">Cancelled / Refunded</button>
+          </div>
+
+          <div class="rides-list" id="rides-list-container">
+            <!-- Injected via View_Ride_Status() -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW: CANCEL RIDE & TIME-BASED REFUND -->
+        <div class="subview-section hidden" id="subview-cancellation">
+          <div class="section-title-bar">
+            <div>
+              <h3 class="sec-title">Time-Based Cancellation & Dynamic Refund Center</h3>
+              <p class="sec-desc">Cancel active bookings with automated pro-rated refund calculations</p>
+            </div>
+            <button type="button" class="btn-secondary" onclick="navigateToDashboard()">
+              ← Return to Dashboard
+            </button>
+          </div>
+
+          <!-- Refund Tier Policy Guide -->
+          <div class="refund-policy-banner">
+            <div class="policy-header">
+              <span class="policy-badge">CarX Dynamic Refund Guarantee</span>
+              <h4>Automated Time-to-Pickup Cancellation Tiers</h4>
+            </div>
+            <div class="policy-tiers-grid">
+              <div class="tier-card tier-green">
+                <span class="tier-clock">&gt; 24 Hours to Pickup</span>
+                <span class="tier-percent">90% Refund</span>
+                <span class="tier-desc">10% processing retention + 100% deposit return</span>
+              </div>
+              <div class="tier-card tier-amber">
+                <span class="tier-clock">6 to 24 Hours to Pickup</span>
+                <span class="tier-percent">50% Refund</span>
+                <span class="tier-desc">50% short-notice deduction + 100% deposit return</span>
+              </div>
+              <div class="tier-card tier-rose">
+                <span class="tier-clock">&lt; 6 Hours to Pickup</span>
+                <span class="tier-percent">20% Refund</span>
+                <span class="tier-desc">80% late cancellation penalty + 100% deposit return</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cancellation-workspace">
+            <div class="cancel-form-card">
+              <h4 class="card-heading">Select Active Booking to Cancel</h4>
+              
+              <div class="form-group">
+                <label for="cancel-booking-select">Eligible Active Booking IDs</label>
+                <select id="cancel-booking-select" onchange="onCancelBookingSelected()">
+                  <!-- Populated dynamically with active bookings -->
+                </select>
+              </div>
+
+              <!-- Interactive Simulator for testing the 3 tiers -->
+              <div class="simulator-box">
+                <div class="sim-header">
+                  <span class="sim-tag">🧪 Test Policy Simulator:</span>
+                  <span>Simulate time remaining before pickup to verify tier calculations</span>
+                </div>
+                <div class="sim-buttons">
+                  <button type="button" class="btn-sim" onclick="simulateTimeRemaining(36)">Scenario A: 36 hrs left (&gt;24h = 90%)</button>
+                  <button type="button" class="btn-sim" onclick="simulateTimeRemaining(14)">Scenario B: 14 hrs left (6-24h = 50%)</button>
+                  <button type="button" class="btn-sim" onclick="simulateTimeRemaining(2)">Scenario C: 2 hrs left (&lt;6h = 20%)</button>
+                  <button type="button" class="btn-sim" onclick="simulateTimeRemaining(null)">Actual System Clock</button>
+                </div>
+              </div>
+
+              <!-- Cancellation Calculation Assessment Details -->
+              <div class="cancellation-assessment" id="cancellation-assessment-box">
+                <div class="assessment-loading" id="assessment-empty">
+                  Please select an active booking above to calculate dynamic refund.
+                </div>
+                <div class="assessment-details hidden" id="assessment-details">
+                  <!-- Injected via JavaScript -->
+                </div>
+              </div>
+
+              <button type="button" class="btn-danger btn-block btn-lg mt-4" id="btn-confirm-cancel" disabled onclick="executeCancellation()">
+                Authorize Cancellation & Process Refund
+              </button>
+            </div>
+
+            <!-- Cancellation Acknowledgement Card (Populated after cancellation) -->
+            <div class="cancellation-ack-card" id="cancellation-ack-card">
+              <div class="ack-placeholder">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                <p>When you authorize a cancellation, the formal <strong>Cancellation Acknowledgement Receipt</strong> will be generated here and logged to the Main Database.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW: REVIEWS & FEEDBACK -->
+        <div class="subview-section hidden" id="subview-feedback">
+          <div class="section-title-bar">
+            <div>
+              <h3 class="sec-title">Customer Feedback & Rating Submission</h3>
+              <p class="sec-desc">Submit comprehensive reviews for your completed rides to update fleet ratings</p>
+            </div>
+            <button type="button" class="btn-secondary" onclick="navigateToDashboard()">
+              ← Return to Dashboard
+            </button>
+          </div>
+
+          <div class="feedback-layout">
+            <div class="feedback-form-card">
+              <h4 class="card-heading">Submit Ride Review</h4>
+              
+              <div class="form-group">
+                <label for="feedback-booking-select">Select Completed Ride</label>
+                <select id="feedback-booking-select" onchange="onFeedbackBookingSelected()">
+                  <!-- Populated with completed rides -->
+                </select>
+              </div>
+
+              <div id="feedback-ride-meta" class="feedback-meta-box hidden">
+                <!-- Vehicle & Agency Details shown here -->
+              </div>
+
+              <div class="form-group">
+                <label>Overall Experience Rating</label>
+                <div class="star-rating-widget" id="star-rating-stars">
+                  <span class="star" data-val="1" onclick="setRating(1)">★</span>
+                  <span class="star" data-val="2" onclick="setRating(2)">★</span>
+                  <span class="star" data-val="3" onclick="setRating(3)">★</span>
+                  <span class="star" data-val="4" onclick="setRating(4)">★</span>
+                  <span class="star" data-val="5" onclick="setRating(5)">★</span>
+                  <span class="rating-label" id="rating-text">Select rating (1 to 5 stars)</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="fb-vehicle-condition">Vehicle Condition (Cleanliness, Performance)</label>
+                  <select id="fb-vehicle-condition">
+                    <option value="Excellent - Pristine Condition">Excellent - Pristine Condition</option>
+                    <option value="Good - Clean and Well Maintained">Good - Clean and Well Maintained</option>
+                    <option value="Average - Acceptable">Average - Acceptable</option>
+                    <option value="Poor - Needed Attention">Poor - Needed Attention</option>
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="fb-agency-service">Agency Staff & Pickup Service</label>
+                  <select id="fb-agency-service">
+                    <option value="Exceptional - Prompt Handover">Exceptional - Prompt Handover</option>
+                    <option value="Satisfactory - Smooth Process">Satisfactory - Smooth Process</option>
+                    <option value="Delayed Handover">Delayed Handover</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="fb-comments">Detailed Review Comments</label>
+                <textarea id="fb-comments" rows="4" placeholder="Tell other travelers about your experience with this vehicle and rental agency..."></textarea>
+              </div>
+
+              <button type="button" class="btn-primary btn-block btn-lg" onclick="Feedback()">
+                Submit Review & Recalculate Ratings
+              </button>
+            </div>
+
+            <!-- Past Reviews List -->
+            <div class="feedback-history-card">
+              <h4 class="card-heading">Recent Community & Verified Reviews</h4>
+              <div class="reviews-feed" id="customer-reviews-feed">
+                <!-- Populated via JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 3: AGENCY MANAGER PORTAL -->
+    <section class="view-panel hidden" id="view-agency">
+      <div class="portal-header">
+        <div class="portal-header-left">
+          <div class="welcome-label">Agency Manager Portal</div>
+          <h2 class="welcome-title" id="agency-welcome-title">Fleet Command Dashboard</h2>
+          <p class="welcome-sub" id="agency-welcome-sub">Manage fleet availability, assign certified drivers, and track customer reservations.</p>
+        </div>
+        <div class="portal-header-right">
+          <button type="button" class="btn-primary" onclick="openAddVehicleModal()">
+            + Add New Vehicle
+          </button>
+          <button type="button" class="btn-secondary" onclick="openAddDriverModal()">
+            + Add Driver
+          </button>
+        </div>
+      </div>
+
+      <!-- Agency KPI Metric Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-blue">🚗</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Total Fleet Size</span>
+            <span class="kpi-val" id="kpi-total-fleet">0</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon bg-emerald">📋</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Active Bookings</span>
+            <span class="kpi-val" id="kpi-active-bookings">0</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon bg-indigo">💰</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Gross Revenue</span>
+            <span class="kpi-val" id="kpi-gross-revenue">$0</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon bg-amber">★</div>
+          <div class="kpi-info">
+            <span class="kpi-label">Agency Rating</span>
+            <span class="kpi-val" id="kpi-agency-rating">4.8 / 5.0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agency Operational Tabs -->
+      <div class="agency-tab-bar">
+        <button type="button" class="agency-tab active" data-tab="fleet" onclick="switchAgencyTab('fleet')">
+          Vehicle Fleet Management (Add_Vehicles & Update_Vehicles)
+        </button>
+        <button type="button" class="agency-tab" data-tab="drivers" onclick="switchAgencyTab('drivers')">
+          Driver Management (Add_Drivers & Update_Drivers)
+        </button>
+        <button type="button" class="agency-tab" data-tab="bookings" onclick="switchAgencyTab('bookings')">
+          Bookings, Receipts & Refund Monitor
+        </button>
+        <button type="button" class="agency-tab" data-tab="reviews" onclick="switchAgencyTab('reviews')">
+          Agency Feedback & Ratings (View_Feedback & Agency_Feedback)
+        </button>
+      </div>
+
+      <!-- TAB PANEL 1: FLEET MANAGEMENT -->
+      <div class="agency-panel" id="agency-panel-fleet">
+        <div class="panel-header-row">
+          <div>
+            <h3 class="panel-heading">Vehicle Fleet Registry</h3>
+            <p class="panel-sub">Inspect, edit daily pricing rates, or toggle vehicle status in the Main Database</p>
+          </div>
+          <div class="panel-actions">
+            <input type="text" id="agency-fleet-search" placeholder="Filter by Model or RC..." oninput="renderAgencyFleetTable()">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Vehicle / Model</th>
+                <th>RC Number</th>
+                <th>Category</th>
+                <th>Daily Rate</th>
+                <th>Rating</th>
+                <th>Operational Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="agency-fleet-tbody">
+              <!-- Injected via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB PANEL 2: DRIVER MANAGEMENT -->
+      <div class="agency-panel hidden" id="agency-panel-drivers">
+        <div class="panel-header-row">
+          <div>
+            <h3 class="panel-heading">Certified Agency Chauffeur Roster</h3>
+            <p class="panel-sub">Manage driver credentials, contact numbers, and active dispatch assignments</p>
+          </div>
+          <button type="button" class="btn-primary" onclick="openAddDriverModal()">+ Add New Driver</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Driver Name</th>
+                <th>Commercial License No</th>
+                <th>Phone Number</th>
+                <th>Duty Status</th>
+                <th>Assigned Vehicle / Booking</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="agency-drivers-tbody">
+              <!-- Injected via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB PANEL 3: BOOKINGS, ACKNOWLEDGEMENTS & REFUND MONITOR -->
+      <div class="agency-panel hidden" id="agency-panel-bookings">
+        <div class="panel-header-row">
+          <div>
+            <h3 class="panel-heading">Customer Reservations & Cancellation Log</h3>
+            <p class="panel-sub">Real-time incoming reservations, KYC verification status, and processed refund audits</p>
+          </div>
+          <span class="refresh-indicator" onclick="renderAgencyBookingsTable()">↻ Refresh Monitor</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Vehicle & RC</th>
+                <th>Rental Dates</th>
+                <th>Driver Mode</th>
+                <th>KYC Doc Status</th>
+                <th>Payment / Refund</th>
+                <th>Status</th>
+                <th>Action (Contact_User)</th>
+              </tr>
+            </thead>
+            <tbody id="agency-bookings-tbody">
+              <!-- Injected via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB PANEL 4: AGENCY FEEDBACK & RATINGS -->
+      <div class="agency-panel hidden" id="agency-panel-reviews">
+        <div class="panel-header-row">
+          <div>
+            <h3 class="panel-heading">Customer Ratings & Service Reviews</h3>
+            <p class="panel-sub">Evaluations logged by customers for vehicles under this agency's jurisdiction</p>
+          </div>
+        </div>
+
+        <div class="reviews-feed" id="agency-reviews-feed">
+          <!-- Injected via View_Feedback() -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================== SYSTEM MODALS ==================== -->
+
+  <!-- MODAL 1: VEHICLE DETAILS MODAL -->
+  <div class="modal-overlay hidden" id="modal-vehicle-details">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title" id="mvd-title">Vehicle Technical Profile</h3>
+        <button type="button" class="modal-close" onclick="closeModal('modal-vehicle-details')">✕</button>
+      </div>
+      <div class="modal-body" id="mvd-body">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SIMULATED PAYMENT GATEWAY (Payment_Process) -->
+  <div class="modal-overlay hidden" id="modal-payment-gateway">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <div class="gateway-branding">
+          <span class="gw-badge">SECURE SIMULATED GATEWAY</span>
+          <h3 class="modal-title">CarX Express Pay</h3>
+        </div>
+        <button type="button" class="modal-close" onclick="closeModal('modal-payment-gateway')">✕</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="payment-amount-box">
+          <span class="pay-label">Total Transaction Amount</span>
+          <span class="pay-amount" id="gw-amount-display">$0.00</span>
+          <span class="pay-booking-ref" id="gw-ref-display">Booking Reference Draft</span>
+        </div>
+
+        <!-- Payment Method Tabs -->
+        <div class="payment-method-tabs">
+          <button type="button" class="pay-tab active" data-method="card" onclick="switchPayMethod('card')">💳 Credit / Debit Card</button>
+          <button type="button" class="pay-tab" data-method="upi" onclick="switchPayMethod('upi')">📱 UPI / QR</button>
+          <button type="button" class="pay-tab" data-method="net" onclick="switchPayMethod('net')">🏦 Net Banking</button>
+        </div>
+
+        <!-- Card Payment Form -->
+        <div class="pay-method-panel" id="pay-panel-card">
+          <div class="form-group">
+            <label>Card Number</label>
+            <input type="text" id="pay-card-no" value="4532 •••• •••• 8841" maxlength="19">
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Expiry Date</label>
+              <input type="text" id="pay-card-exp" value="08/28" placeholder="MM/YY">
+            </div>
+            <div class="form-group flex-1">
+              <label>CVV / CVC</label>
+              <input type="password" id="pay-card-cvv" value="882" maxlength="4">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Cardholder Name</label>
+            <input type="text" id="pay-card-name" value="Priya Sharma">
+          </div>
+        </div>
+
+        <!-- UPI Panel -->
+        <div class="pay-method-panel hidden" id="pay-panel-upi">
+          <div class="form-group">
+            <label>Virtual Payment Address (VPA / UPI ID)</label>
+            <input type="text" id="pay-upi-id" value="traveler@okhdfcbank" placeholder="username@upi">
+          </div>
+          <div class="upi-qr-placeholder">
+            <div class="mock-qr">
+              <div class="qr-box"></div>
+              <span>Scan using any UPI App (GPay / PhonePe / Paytm)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Net Banking Panel -->
+        <div class="pay-method-panel hidden" id="pay-panel-net">
+          <div class="form-group">
+            <label>Select Financial Institution</label>
+            <select id="pay-bank-select">
+              <option value="HDFC Bank">HDFC Bank Premier</option>
+              <option value="ICICI Bank">ICICI Corporate & Retail</option>
+              <option value="State Bank of India">State Bank of India</option>
+              <option value="Axis Bank">Axis NetBanking</option>
+            </select>
+          </div>
+          <p class="text-muted small">You will be routed to the simulated 2FA OTP verification screen.</p>
+        </div>
+
+        <!-- Test Toggle: Simulate Success vs Failure -->
+        <div class="payment-sim-toggle-box">
+          <label class="sim-toggle-label">
+            <span class="toggle-title">Simulate Payment Result:</span>
+            <div class="toggle-options">
+              <label><input type="radio" name="pay-sim-result" value="success" checked> ✅ Force Success</label>
+              <label><input type="radio" name="pay-sim-result" value="failure"> ❌ Force Failure</label>
+            </div>
+          </label>
+        </div>
+
+        <button type="button" class="btn-primary btn-block btn-lg" id="btn-execute-pay" onclick="Payment_Process()">
+          Authorize & Complete Payment
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: BOOKING TICKET & ACKNOWLEDGEMENT (Generate_ticket) -->
+  <div class="modal-overlay hidden" id="modal-booking-ticket">
+    <div class="modal-card modal-ticket">
+      <div class="modal-header no-print">
+        <h3 class="modal-title">Booking Confirmation & Vehicle Ticket</h3>
+        <button type="button" class="modal-close" onclick="closeModal('modal-booking-ticket')">✕</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="printable-ticket" id="printable-ticket-content">
+          <!-- Injected via Generate_ticket() -->
+        </div>
+
+        <div class="ticket-actions no-print">
+          <button type="button" class="btn-secondary" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <button type="button" class="btn-primary" onclick="closeModal('modal-booking-ticket'); openCustomerWorkflow('rides');">View in My Bookings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: CONTACT USER (Contact_User) -->
+  <div class="modal-overlay hidden" id="modal-contact-user">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3 class="modal-title">Dispatch Vehicle Instructions (Contact_User)</h3>
+        <button type="button" class="modal-close" onclick="closeModal('modal-contact-user')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">Transmit verified chauffeur details, vehicle handover spot, and emergency support hotline directly to customer's active notification inbox.</p>
+        
+        <div class="form-group">
+          <label>Recipient Customer</label>
+          <input type="text" id="contact-cust-name" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Associated Booking ID</label>
+          <input type="text" id="contact-booking-id" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Assign Certified Chauffeur</label>
+          <select id="contact-driver-select">
+            <!-- Populated with agency drivers -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Handover & Pickup Instructions</label>
+          <textarea id="contact-message" rows="3">Vehicle is inspected and parked at Bay 4. Assigned driver will meet you with the physical keys upon showing your Booking ID.</textarea>
+        </div>
+
+        <button type="button" class="btn-primary btn-block" onclick="submitContactUser()">
+          Dispatch Notification & Update Main Database
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: ADD / EDIT VEHICLE (Add_Vehicles & Update_Vehicles) -->
+  <div class="modal-overlay hidden" id="modal-vehicle-form">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3 class="modal-title" id="veh-modal-title">Add Vehicle to Fleet (Add_Vehicles)</h3>
+        <button type="button" class="modal-close" onclick="closeModal('modal-vehicle-form')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-manage-vehicle" onsubmit="handleSaveVehicle(event)">
+          <input type="hidden" id="mv-id">
+          
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="mv-model">Vehicle Model Name</label>
+              <input type="text" id="mv-model" required placeholder="e.g., Hyundai Creta SX">
+            </div>
+            <div class="form-group flex-1">
+              <label for="mv-rc">Registration (RC No)</label>
+              <input type="text" id="mv-rc" required placeholder="e.g., DL-01-AB-1024">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="mv-category">Category</label>
+              <select id="mv-category">
+                <option value="SUV">SUV</option>
+                <option value="Sedan">Sedan</option>
+                <option value="Hatchback">Hatchback</option>
+                <option value="Luxury">Luxury</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="mv-rate">Daily Rental Rate ($)</label>
+              <input type="number" id="mv-rate" min="20" max="1000" required placeholder="55">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="mv-fuel">Fuel Type</label>
+              <select id="mv-fuel">
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Electric">Electric</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="mv-trans">Transmission</label>
+              <select id="mv-trans">
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="mv-seats">Seats</label>
+              <input type="number" id="mv-seats" min="2" max="10" value="5">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="mv-status">Operational Status</label>
+            <select id="mv-status">
+              <option value="Available">Available</option>
+              <option value="Booked">Booked</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="mv-image">Vehicle Image URL</label>
+            <input type="url" id="mv-image" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80">
+          </div>
+
+          <button type="submit" class="btn-primary btn-block btn-lg" id="btn-save-vehicle">
+            Save Vehicle to Main Database
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: ADD DRIVER (Add_Drivers) -->
+  <div class="modal-overlay hidden" id="modal-driver-form">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3 class="modal-title">Register Driver (Add_Drivers)</h3>
+        <button type="button" class="modal-close" onclick="closeModal('modal-driver-form')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-manage-driver" onsubmit="handleSaveDriver(event)">
+          <div class="form-group">
+            <label for="md-name">Full Legal Name</label>
+            <input type="text" id="md-name" required placeholder="e.g., Rajesh Sharma">
+          </div>
+          <div class="form-group">
+            <label for="md-license">Commercial Driver's License No</label>
+            <input type="text" id="md-license" required placeholder="DL-IND-2021-998811">
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="md-phone">Contact Phone Number</label>
+              <input type="tel" id="md-phone" required placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group flex-1">
+              <label for="md-status">Duty Status</label>
+              <select id="md-status">
+                <option value="Available">Available</option>
+                <option value="Assigned">Assigned</option>
+                <option value="Off-Duty">Off-Duty</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary btn-block btn-lg">
+            Register Driver to Database
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: GOOGLE OAUTH SIMULATION -->
+  <div class="modal-overlay hidden" id="modal-google-oauth">
+    <div class="modal-card modal-oauth">
+      <div class="oauth-box">
+        <div class="oauth-logo">
+          <svg viewBox="0 0 24 24" width="36" height="36">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+        </div>
+        <h3 class="oauth-heading">Sign in with Google</h3>
+        <p class="oauth-sub">Choose an active account to authorize CarX Mobility</p>
+        
+        <div class="oauth-account-list">
+          <div class="oauth-account-item" onclick="completeGoogleOAuth('priya.sharma@gmail.com', 'Priya Sharma')">
+            <div class="oauth-avatar bg-purple">PS</div>
+            <div class="oauth-account-info">
+              <span class="oauth-name">Priya Sharma</span>
+              <span class="oauth-email">priya.sharma@gmail.com</span>
+            </div>
+          </div>
+          <div class="oauth-account-item" onclick="completeGoogleOAuth('john.doe@gmail.com', 'John Doe')">
+            <div class="oauth-avatar bg-blue">JD</div>
+            <div class="oauth-account-info">
+              <span class="oauth-name">John Doe</span>
+              <span class="oauth-email">john.doe@gmail.com</span>
+            </div>
+          </div>
+          <div class="oauth-account-item" onclick="completeGoogleOAuth('apex.manager@gmail.com', 'Apex Fleet Director', 'agency')">
+            <div class="oauth-avatar bg-emerald">AF</div>
+            <div class="oauth-account-info">
+              <span class="oauth-name">Apex Fleet Director (Agency)</span>
+              <span class="oauth-email">apex.manager@gmail.com</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-secondary btn-block mt-3" onclick="closeModal('modal-google-oauth')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-stack" id="toast-stack"></div>
+
+  <!-- SCRIPT -->
+  <script src="app.js"></script>
+</body>
+</html>
