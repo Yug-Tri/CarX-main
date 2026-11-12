@@ -1,0 +1,19 @@
+{
+  "name": "carx-car-rental-system",
+  "version": "1.0.0",
+  "description": "Enterprise Car Rental Agency Management System with Pure Vanilla Stack",
+  "main": "index.html",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "serve": "node server.js"
+  },
+  "keywords": [
+    "car-rental",
+    "fleet-management",
+    "vanilla-js",
+    "spa"
+  ],
+  "author": "Yug",
+  "license": "MIT"
+}
