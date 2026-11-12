@@ -105,3 +105,4 @@ Because CarX is built strictly with vanilla web technologies:
 ├── app.js       # Core application engine, persistence layer & workflow logic
 └── README.md    # Documentation and usage guide
 ```
+
